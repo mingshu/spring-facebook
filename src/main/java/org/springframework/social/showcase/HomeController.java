@@ -21,7 +21,8 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.springframework.social.connect.ConnectionRepository;
-import org.springframework.social.showcase.account.AccountRepository;
+import org.springframework.social.showcase.document.Customer;
+import org.springframework.social.showcase.service.CustomerService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,19 +31,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class HomeController {
 	
 	private final Provider<ConnectionRepository> connectionRepositoryProvider;
-	
-	private final AccountRepository accountRepository;
+//	private final AccountRepository accountRepository;
+	private final CustomerService customerService;
 
 	@Inject
-	public HomeController(Provider<ConnectionRepository> connectionRepositoryProvider, AccountRepository accountRepository) {
+	public HomeController(Provider<ConnectionRepository> connectionRepositoryProvider, CustomerService customerService) {
 		this.connectionRepositoryProvider = connectionRepositoryProvider;
-		this.accountRepository = accountRepository;
+		this.customerService = customerService;
 	}
 
 	@RequestMapping("/")
 	public String home(Principal currentUser, Model model) {
 		model.addAttribute("connectionsToProviders", getConnectionRepository().findAllConnections());
-		model.addAttribute(accountRepository.findAccountByUsername(currentUser.getName()));
+//		model.addAttribute(accountRepository.findAccountByUsername(currentUser.getName()));
+		String username = currentUser.getName();
+		Customer find = customerService.find(username);
+		model.addAttribute(find);
 		return "home";
 	}
 	

@@ -39,32 +39,14 @@
 				</fieldset>
 				<button type="submit">Sign In</button>
 				
-				<p>Some test user/password pairs you may use are:</p>
-				<ul>
-					<li>habuma/tacos</li>
-					<li>rclarkson/atlanta</li>
-				</ul>
-				
 				<p>Or you can <a th:href="@{/signup}">signup</a> with a new account.</p>
 			</form>
 
-			<!-- TWITTER SIGNIN -->
-			<form id="tw_signin" th:action="@{/signin/twitter}" method="POST">
-				<input type="hidden" name="_csrf" th:value="${_csrf.token}"></input>
-				<button type="submit"><img th:src="@{/social/twitter/sign-in-with-twitter-d.png}"></img></button>
-			</form>
-		
 			<!-- FACEBOOK SIGNIN -->
 			<form name="fb_signin" id="fb_signin" th:action="@{/signin/facebook}" method="POST">
 				<input type="hidden" name="_csrf" th:value="${_csrf.token}"></input>
 				<input type="hidden" name="scope" value="read_stream,user_posts,user_photos"></input>
 				<button type="submit"><img th:src="@{/social/facebook/sign-in-with-facebook.png}"></img></button>
-			</form>
-		
-			<!-- LINKEDIN SIGNIN -->
-			<form name="li_signin" id="li_signin" th:action="@{/signin/linkedin}" method="POST">
-				<input type="hidden" name="_csrf" th:value="${_csrf.token}"></input>
-				<button type="submit">Sign In with LinkedIn</button>
 			</form>
 		</div>		
 	</body>

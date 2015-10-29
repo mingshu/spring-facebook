@@ -22,11 +22,11 @@ import org.springframework.social.connect.Connection;
 import org.springframework.social.connect.ConnectionFactoryLocator;
 import org.springframework.social.connect.UsersConnectionRepository;
 import org.springframework.social.connect.web.ProviderSignInUtils;
-import org.springframework.social.showcase.account.Account;
-import org.springframework.social.showcase.account.AccountRepository;
-import org.springframework.social.showcase.account.UsernameAlreadyInUseException;
+import org.springframework.social.showcase.document.Customer;
+import org.springframework.social.showcase.exception.UsernameAlreadyInUseException;
 import org.springframework.social.showcase.message.Message;
 import org.springframework.social.showcase.message.MessageType;
+import org.springframework.social.showcase.service.CustomerService;
 import org.springframework.social.showcase.signin.SignInUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
@@ -38,49 +38,56 @@ import org.springframework.web.context.request.WebRequest;
 @Controller
 public class SignupController {
 
-	private final AccountRepository accountRepository;
 	private final ProviderSignInUtils providerSignInUtils;
+	private final CustomerService customerService;
 
 	@Inject
-	public SignupController(AccountRepository accountRepository, 
-		                    ConnectionFactoryLocator connectionFactoryLocator,
-		                    UsersConnectionRepository connectionRepository) {
-		this.accountRepository = accountRepository;
+	public SignupController(CustomerService customerService, ConnectionFactoryLocator connectionFactoryLocator,
+			UsersConnectionRepository connectionRepository) {
+		this.customerService = customerService;
 		this.providerSignInUtils = new ProviderSignInUtils(connectionFactoryLocator, connectionRepository);
 	}
 
-	@RequestMapping(value="/signup", method=RequestMethod.GET)
+	@RequestMapping(value = "/signup", method = RequestMethod.GET)
 	public SignupForm signupForm(WebRequest request) {
 		Connection<?> connection = providerSignInUtils.getConnectionFromSession(request);
 		if (connection != null) {
-			request.setAttribute("message", new Message(MessageType.INFO, "Your " + StringUtils.capitalize(connection.getKey().getProviderId()) + " account is not associated with a Spring Social Showcase account. If you're new, please sign up."), WebRequest.SCOPE_REQUEST);
+			request.setAttribute("message",
+					new Message(MessageType.INFO,
+							"Your " + StringUtils.capitalize(connection.getKey().getProviderId())
+									+ " account is not associated with a Spring Social Showcase account. If you're new, please sign up."),
+					WebRequest.SCOPE_REQUEST);
 			return SignupForm.fromProviderUser(connection.fetchUserProfile());
 		} else {
 			return new SignupForm();
 		}
 	}
 
-	@RequestMapping(value="/signup", method=RequestMethod.POST)
+	@RequestMapping(value = "/signup", method = RequestMethod.POST)
 	public String signup(@Valid SignupForm form, BindingResult formBinding, WebRequest request) {
 		if (formBinding.hasErrors()) {
 			return null;
 		}
-		Account account = createAccount(form, formBinding);
-		if (account != null) {
-			SignInUtils.signin(account.getUsername());
-			providerSignInUtils.doPostSignUp(account.getUsername(), request);
+		Customer customer = createAccount(form, formBinding);
+		if (customer != null) {
+			SignInUtils.signin(customer.getUsername());
+			providerSignInUtils.doPostSignUp(customer.getUsername(), request);
 			return "redirect:/";
 		}
 		return null;
 	}
 
 	// internal helpers
-	
-	private Account createAccount(SignupForm form, BindingResult formBinding) {
+
+	private Customer createAccount(SignupForm form, BindingResult formBinding) {
 		try {
-			Account account = new Account(form.getUsername(), form.getPassword(), form.getFirstName(), form.getLastName());
-			accountRepository.createAccount(account);
-			return account;
+			Customer customer = new Customer();
+			customer.setUsername(form.getUsername());
+			customer.setLastName(form.getLastName());
+			customer.setPassword(form.getPassword());
+			customer.setFirstName(form.getFirstName());
+			customerService.register(customer);
+			return customer;
 		} catch (UsernameAlreadyInUseException e) {
 			formBinding.rejectValue("username", "user.duplicateUsername", "already in use");
 			return null;
